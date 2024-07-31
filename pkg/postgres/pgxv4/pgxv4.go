@@ -1,4 +1,4 @@
-package postgres
+package pgxv4
 
 import (
 	"context"
@@ -8,6 +8,11 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+/**
+ * Init
+ *
+ * Initialize database connection
+ */
 func Init(username string, password string, host string, port int, database string, schema string, debug bool, logger *logger.Logger) *pgxpool.Pool {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?search_path=%s", username, password, host, port, database, schema)
 
