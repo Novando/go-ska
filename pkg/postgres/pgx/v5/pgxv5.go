@@ -1,37 +1,37 @@
-package pgxv5
+package pgx
 
 import (
 	"context"
 	"fmt"
+	"github.com/ciazhar/go-zhar/pkg/postgresql/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ciazhar/go-zhar/pkg/reposqlc"
 )
 
-/**
- * Init
- *
- * Initialize database connection
- */
-func Init(
+// InitPGXv5
+//
+// Initialize database connection
+func InitPGXv5(
 	user string,
 	pass string,
 	host string,
 	port int,
 	name string,
+	schema string,
 	maxPool int,
 ) (
 	pool *pgxpool.Pool,
-	query *reposqlc.Queries,
+	query *pgx.Queries,
 	err error,
 ) {
 	url := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?pool_max_conns=%d",
+		"postgres://%s:%s@%s:%d/%s?pool_max_conns=%d&search_path=%s&sslmode=disable",
 		user,
 		pass,
 		host,
 		port,
 		name,
 		maxPool,
+		schema,
 	)
 	c, err := pgxpool.ParseConfig(url)
 	if err != nil {
@@ -43,6 +43,6 @@ func Init(
 		return
 	}
 
-	query = reposqlc.New(pool)
+	query = pgx.NewQuery(pool)
 	return
 }
