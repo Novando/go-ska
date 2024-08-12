@@ -6,11 +6,8 @@ import (
 	"strings"
 )
 
-/**
- * InitViper
- *
- * Initialize Viper to use the config file as env variable
- */ 
+// InitViper
+// Initialize Viper to use the config file as env variable 
 func InitViper(path string, logger logger.Logger) error {
 	var configName string
 	splitPaths := strings.Split(path, "/")

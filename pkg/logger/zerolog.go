@@ -10,7 +10,6 @@ import (
 	"path"
 )
 
-// Config Configuration for logging
 type Config struct {
 
 	// Enable console logging
@@ -19,7 +18,7 @@ type Config struct {
 	// EncodeLogsAsJson makes the log framework log JSON
 	EncodeLogsAsJson bool
 
-	// FileLoggingEnabled makes the framework log to a file
+	// FileLoggingEnabled makes the framework log to a file.go
 	// the fields below can be skipped if this value is false!
 	FileLoggingEnabled bool
 
@@ -37,21 +36,18 @@ type Config struct {
 
 	// MaxAge the max age in days to keep a logfile
 	MaxAge int
+
+	// CallerSkip the number of directory hierarchy to be skipped
+	CallerSkip int
 }
 
 type Logger struct {
 	serviceLogger *zerolog.Logger
 }
 
-// Init sets up the logging framework
-//
-// In production, the container logs will be collected and file logging should be disabled. However,
-// during development it's nicer to see logs as text and optionally write to a file when debugging
-// problems in the containerized pipeline
-//
-// The output log file will be located at /var/log/service-xyz/service-xyz.log and
-// will be rolled according to configuration set.
-func Init(config Config) *Logger {
+// InitZerolog
+// Initialize Zerolog, it during cmd main.go
+func InitZerolog(config Config) *Logger {
 	var writers []io.Writer
 
 	if config.ConsoleLoggingEnabled {
@@ -59,6 +55,9 @@ func Init(config Config) *Logger {
 	}
 	if config.FileLoggingEnabled {
 		writers = append(writers, newRollingFile(config))
+	}
+	if config.CallerSkip != 0 {
+		zerolog.CallerSkipFrameCount = config.CallerSkip
 	}
 	mw := io.MultiWriter(writers...)
 
@@ -80,7 +79,6 @@ func Init(config Config) *Logger {
 }
 
 func newRollingFile(config Config) io.Writer {
-
 	l := &lumberjack.Logger{
 		Filename:   path.Join(config.Directory, config.Filename),
 		MaxBackups: config.MaxBackups, // files
@@ -95,25 +93,44 @@ func (l *Logger) GetServiceLogger() *zerolog.Logger {
 	return l.serviceLogger
 }
 
+// Errorf
+// Return a string as error value type,
+// and print formatted error message
 func (l *Logger) Errorf(format string, a ...interface{}) error {
 	errs := fmt.Errorf(format, a...)
-	sentry.CaptureException(errs)
 	l.serviceLogger.Error().Caller().Msgf(errs.Error())
 	return errs
 }
 
+// Infof
+// Print log message with format
 func (l *Logger) Infof(format string, a ...interface{}) {
 	l.serviceLogger.Info().Msgf(format, a...)
 }
 
+// Info
+// Print log message
 func (l *Logger) Info(format string) {
 	l.serviceLogger.Info().Msg(format)
 }
 
+// Fatalf
+// Stop the app after invocation, and
+// print Fatal message with format
 func (l *Logger) Fatalf(format string, a ...interface{}) {
 	l.serviceLogger.Fatal().Msgf(format, a...)
 }
 
+// Fatal
+// Stop the app after invocation,
+// and print the Fatal message
 func (l *Logger) Fatal(format string) {
 	l.serviceLogger.Fatal().Msg(format)
+}
+
+// Panic
+// Stop the app after invocation,
+// and print the Panic message
+func (l *Logger) Panic(format string) {
+	l.serviceLogger.Panic().Msg(format)
 }
