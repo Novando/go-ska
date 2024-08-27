@@ -2,13 +2,13 @@ package kafka
 
 import (
 	"github.com/IBM/sarama"
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"gitlab.com/mailtarget/layang-tech/purify/pkg/logger"
 	"strings"
 )
 
 type SyncProducer struct {
 	producer sarama.SyncProducer
-	logger   *logger.Logger
+	log      *logger.Logger
 }
 
 type SyncProducerConfig struct {
@@ -39,7 +39,15 @@ func NewSyncProducer(brokers string, logger *logger.Logger, producerConfig ...Sy
 	logger.Info("Connected to Kafka Producer")
 	return &SyncProducer{
 		producer: producer,
-		logger:   logger,
+		log:      logger,
+	}
+}
+
+// NewSyncProducerWithMock allows injecting a mock producer for testing.
+func NewSyncProducerWithMock(producer sarama.SyncProducer) *SyncProducer {
+	return &SyncProducer{
+		producer: producer,
+		log:      logger.InitZerolog(logger.Config{ConsoleLoggingEnabled: false}),
 	}
 }
 
@@ -51,7 +59,7 @@ func (p *SyncProducer) PublishMessage(topic string, value string) {
 
 	_, _, err := p.producer.SendMessage(msg)
 	if err != nil {
-		p.logger.Infof("Failed to publish a message: %v", err)
+		p.log.Fatalf("Failed to publish a message: %v", err)
 	}
 }
 
@@ -64,17 +72,13 @@ func (p *SyncProducer) PublishMessageWithKey(topic string, key string, message s
 
 	_, _, err := p.producer.SendMessage(msg)
 	if err != nil {
-		p.logger.Infof("Failed to publish a message: %v", err)
+		p.log.Fatalf("Failed to publish a message: %v", err)
 	}
-}
-
-func (p *SyncProducer) GetProducerInstance() sarama.SyncProducer {
-	return p.producer
 }
 
 func (p *SyncProducer) Close() {
 	err := p.producer.Close()
 	if err != nil {
-		p.logger.Fatalf("Failed to close Kafka Producer: %v", err)
+		p.log.Fatalf("Failed to close Kafka Producer: %v", err)
 	}
 }

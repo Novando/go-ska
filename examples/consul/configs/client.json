@@ -1,7 +1,0 @@
-{
-  "consul": {
-    "host": "localhost",
-    "port": 8500,
-    "schema": "http"
-  }
-}

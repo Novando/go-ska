@@ -2,7 +2,6 @@ package logger
 
 import (
 	"fmt"
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
@@ -46,32 +45,36 @@ type Logger struct {
 }
 
 // InitZerolog
-// Initialize Zerolog, it during cmd main.go
-func InitZerolog(config Config) *Logger {
+// Initialize Zerolog, call it during cmd main.go
+func InitZerolog(config ...Config) *Logger {
+	if len(config) == 0 {
+		config = append(config, Config{
+			ConsoleLoggingEnabled: true,
+		})
+	}
 	var writers []io.Writer
 
-	if config.ConsoleLoggingEnabled {
+	if config[0].ConsoleLoggingEnabled {
 		writers = append(writers, zerolog.ConsoleWriter{Out: os.Stderr})
 	}
-	if config.FileLoggingEnabled {
-		writers = append(writers, newRollingFile(config))
+	if config[0].FileLoggingEnabled {
+		writers = append(writers, newRollingFile(config[0]))
 	}
-	if config.CallerSkip != 0 {
-		zerolog.CallerSkipFrameCount = config.CallerSkip
+	if config[0].CallerSkip != 0 {
+		zerolog.CallerSkipFrameCount = config[0].CallerSkip
 	}
 	mw := io.MultiWriter(writers...)
 
 	logger := zerolog.New(mw).With().Timestamp().Logger()
 
 	logger.Info().
-		Bool("fileLogging", config.FileLoggingEnabled).
-		Bool("jsonLogOutput", config.EncodeLogsAsJson).
-		Str("logDirectory", config.Directory).
-		Str("fileName", config.Filename).
-		Int("maxSizeMB", config.MaxSize).
-		Int("maxBackups", config.MaxBackups).
-		Int("maxAgeInDays", config.MaxAge).
-		Msg("logging configured")
+		Bool("fileLogging", config[0].FileLoggingEnabled).
+		Bool("jsonLogOutput", config[0].EncodeLogsAsJson).
+		Str("logDirectory", config[0].Directory).
+		Str("fileName", config[0].Filename).
+		Int("maxSizeMB", config[0].MaxSize).
+		Int("maxBackups", config[0].MaxBackups).
+		Int("maxAgeInDays", config[0].MaxAge)
 
 	return &Logger{
 		serviceLogger: &logger,
