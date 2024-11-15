@@ -3,8 +3,8 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"github.com/ciazhar/go-zhar/pkg"
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"github.com/novando/go-ska/pkg"
+	"github.com/novando/go-ska/pkg/logger"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"sync"
 )

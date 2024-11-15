@@ -7,11 +7,12 @@ import (
 	"io"
 	"os"
 	"path"
+	"sync"
 )
 
 type Config struct {
 
-	// Enable console logging
+	// ConsoleLoggingEnabled console logging
 	ConsoleLoggingEnabled bool
 
 	// EncodeLogsAsJson makes the log framework log JSON
@@ -44,9 +45,19 @@ type Logger struct {
 	serviceLogger *zerolog.Logger
 }
 
-// InitZerolog
-// Initialize Zerolog, call it during cmd main.go
-func InitZerolog(config ...Config) *Logger {
+var (
+	instance *Logger
+	once     sync.Once
+)
+
+// InitZerolog, call it during cmd main.go
+func InitZerolog(config Config) {
+	once.Do(func() {
+		instance = initializer(config)
+	})
+}
+
+func initializer(config ...Config) *Logger {
 	if len(config) == 0 {
 		config = append(config, Config{
 			ConsoleLoggingEnabled: true,
@@ -92,27 +103,27 @@ func newRollingFile(config Config) io.Writer {
 	return l
 }
 
-func (l *Logger) GetServiceLogger() *zerolog.Logger {
-	return l.serviceLogger
+// Call the singleton function
+func Call() *Logger {
+	if instance == nil {
+		fmt.Println("logger not initialized, Call InitZerolog() first.")
+		return nil
+	}
+	return instance
 }
 
-// Errorf
-// Return a string as error value type,
-// and print formatted error message
-func (l *Logger) Errorf(format string, a ...interface{}) error {
+// Errorf print formatted error message
+func (l *Logger) Errorf(format string, a ...interface{}) {
 	errs := fmt.Errorf(format, a...)
 	l.serviceLogger.Error().Caller().Msgf(errs.Error())
-	return errs
 }
 
-// Infof
-// Print log message with format
+// Infof Print log message with format
 func (l *Logger) Infof(format string, a ...interface{}) {
 	l.serviceLogger.Info().Msgf(format, a...)
 }
 
-// Info
-// Print log message
+// Info Print log message
 func (l *Logger) Info(format string) {
 	l.serviceLogger.Info().Msg(format)
 }
@@ -134,6 +145,6 @@ func (l *Logger) Fatal(format string) {
 // Panic
 // Stop the app after invocation,
 // and print the Panic message
-func (l *Logger) Panic(format string) {
-	l.serviceLogger.Panic().Msg(format)
+func (l *Logger) Panic(format string, a ...interface{}) {
+	l.serviceLogger.Panic().Msgf(format, a...)
 }

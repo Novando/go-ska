@@ -1,4 +1,4 @@
-module github.com/ciazhar/go-zhar
+module github.com/novando/go-ska
 
 go 1.22.2
 

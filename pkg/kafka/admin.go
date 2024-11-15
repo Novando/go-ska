@@ -3,7 +3,7 @@ package kafka
 import (
 	"errors"
 	"github.com/IBM/sarama"
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"github.com/novando/go-ska/pkg/logger"
 	"strings"
 )
 

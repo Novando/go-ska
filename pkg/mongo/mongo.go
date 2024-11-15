@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"github.com/novando/go-ska/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net/url"
 	"strings"

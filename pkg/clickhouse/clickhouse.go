@@ -2,7 +2,7 @@ package clickhouse
 
 import (
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"github.com/novando/go-ska/pkg/logger"
 )
 
 func Init(hosts string, database string, username string, password string, debug bool, logger *logger.Logger) clickhouse.Conn {

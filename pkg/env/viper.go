@@ -1,14 +1,18 @@
 package env
 
 import (
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"github.com/novando/go-ska/pkg/logger"
 	"github.com/spf13/viper"
 	"strings"
 )
 
 // InitViper
-// Initialize Viper to use the config file as env variable 
-func InitViper(path string, logger logger.Logger) error {
+// Initialize Viper to use the config file as env variable
+func InitViper(path string, l ...*logger.Logger) error {
+	log := logger.Call()
+	if len(l) > 0 {
+		log = l[0]
+	}
 	var configName string
 	splitPaths := strings.Split(path, "/")
 	if len(splitPaths) > 0 {
@@ -18,15 +22,19 @@ func InitViper(path string, logger logger.Logger) error {
 	}
 	splitNames := strings.Split(configName, ".")
 	if len(splitNames) < 2 {
-		logger.Fatalf("Failed to parse config name")
+		err := errors.New("failed to parse config name")
+		if log != nil {
+			log.Fatalf(err.Error())
+		}
+		return err
 	}
 	formatName := splitNames[len(splitNames)-1]
 	viper.SetConfigName(strings.TrimRight(configName, "."+formatName))
 	viper.SetConfigType(formatName)
 	viper.AddConfigPath(strings.TrimRight(path, configName))
 	err := viper.ReadInConfig()
-	if err != nil {
-		logger.Infof("Configs file: %v", err)
+	if err != nil && log != nil {
+		logger.Call().Infof("Configs file: %v", err)
 	}
 	return err
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ciazhar/go-zhar/pkg/logger"
+	"github.com/novando/go-ska/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -52,7 +52,7 @@ func (r *Redis) FlushAll() {
  * Get
  *
  * Get Redis data value by the key, return error
- * and empty string if key-value not exist 
+ * and empty string if key-value not exist
  */
 func (r *Redis) Get(key string) (string, error) {
 	val, err := r.rdb.Get(context.Background(), key).Result()
@@ -69,7 +69,7 @@ func (r *Redis) Get(key string) (string, error) {
  * Set
  *
  * Assign/create Redis value to it's key along with the expiration time.
- * return error and empty string if key-value not exist 
+ * return error and empty string if key-value not exist
  */
 func (r *Redis) Set(key string, value string, expiration time.Duration) error {
 	_, err := r.rdb.Set(context.Background(), key, value, expiration).Result()
@@ -83,7 +83,7 @@ func (r *Redis) Set(key string, value string, expiration time.Duration) error {
  * GetHash
  *
  * Get Redis data value by the key on the certain hash, return error
- * and empty string if key-value not exist 
+ * and empty string if key-value not exist
  */
 func (r *Redis) GetHash(key string, field string) (string, error) {
 	val, err := r.rdb.HGet(context.Background(), key, field).Result()
@@ -100,7 +100,7 @@ func (r *Redis) GetHash(key string, field string) (string, error) {
  * SetHash
  *
  * Assign/create Redis value to it's key on certain hash.
- * return error and empty string if key-value not exist 
+ * return error and empty string if key-value not exist
  */
 func (r *Redis) SetHash(key string, field string, value string) error {
 	_, err := r.rdb.HSet(context.Background(), key, field, value).Result()
@@ -114,7 +114,7 @@ func (r *Redis) SetHash(key string, field string, value string) error {
  * SetHashTTL
  *
  * Assign/create Redis value to it's key on certain hash along with
- * the expiration time. return error and empty string if key-value not exist 
+ * the expiration time. return error and empty string if key-value not exist
  */
 func (r *Redis) SetHashTTL(key string, field string, value string, ttl time.Duration) error {
 	_, err := r.rdb.HSet(context.Background(), key, field, value).Result()
@@ -147,7 +147,7 @@ func (r *Redis) Delete(key string) error {
 /**
  * Close
  *
- * Close Redis connection 
+ * Close Redis connection
  */
 func (r *Redis) Close() {
 	defer func() {

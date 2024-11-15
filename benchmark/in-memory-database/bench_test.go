@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/ciazhar/go-zhar/pkg/logger"
-	"github.com/ciazhar/go-zhar/pkg/redis"
+	"github.com/novando/go-ska/pkg/logger"
+	"github.com/novando/go-ska/pkg/redis"
 	"testing"
 )
 

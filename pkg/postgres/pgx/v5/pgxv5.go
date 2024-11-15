@@ -3,8 +3,8 @@ package pgx
 import (
 	"context"
 	"fmt"
-	"github.com/ciazhar/go-zhar/pkg/postgresql/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/novando/go-ska/pkg/postgresql/pgx"
 )
 
 // InitPGXv5
