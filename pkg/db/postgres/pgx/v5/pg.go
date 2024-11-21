@@ -20,7 +20,8 @@ type Config struct {
 }
 
 type PG struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	log *logger.Logger
 }
 
 // InitPGXv5
@@ -87,5 +88,5 @@ func InitPGXv5(cfg Config, l ...*logger.Logger) (query *PG, err error) {
 	if log != nil {
 		log.Infof("PG connected with %s@%s", cfg.Name, cfg.Host)
 	}
-	return &PG{pool}, err
+	return &PG{db: pool, log: log}, err
 }
