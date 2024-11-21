@@ -118,14 +118,14 @@ func (l *Logger) Errorf(format string, a ...interface{}) {
 	l.serviceLogger.Error().Caller().Msgf(errs.Error())
 }
 
-// Infof Print log message with format
-func (l *Logger) Infof(format string, a ...interface{}) {
-	l.serviceLogger.Info().Msgf(format, a...)
+// Warnf print formatter warn message
+func (l *Logger) Warnf(format string, a ...interface{}) {
+	l.serviceLogger.Warn().Msgf(format, a...)
 }
 
-// Info Print log message
-func (l *Logger) Info(format string) {
-	l.serviceLogger.Info().Msg(format)
+// Infof print formated info message
+func (l *Logger) Infof(format string, a ...interface{}) {
+	l.serviceLogger.Info().Msgf(format, a...)
 }
 
 // Fatalf
@@ -135,16 +135,9 @@ func (l *Logger) Fatalf(format string, a ...interface{}) {
 	l.serviceLogger.Fatal().Msgf(format, a...)
 }
 
-// Fatal
-// Stop the app after invocation,
-// and print the Fatal message
-func (l *Logger) Fatal(format string) {
-	l.serviceLogger.Fatal().Msg(format)
-}
-
-// Panic
+// Panicf
 // Stop the app after invocation,
 // and print the Panic message
-func (l *Logger) Panic(format string, a ...interface{}) {
+func (l *Logger) Panicf(format string, a ...interface{}) {
 	l.serviceLogger.Panic().Msgf(format, a...)
 }

@@ -16,3 +16,7 @@ Documentation of how i use Go
 
 ### Logger
 - Zerolog
+
+### Utilities
+- String
+- UUID

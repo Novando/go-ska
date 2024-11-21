@@ -1,11 +1,9 @@
-package stringUtil
+package utilsString
 
 import (
 	"math/rand"
 	"time"
 )
-
-var CHARSET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 func RandomString(length int) (res string) {
 	if length < 1 {

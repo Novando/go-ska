@@ -1,4 +1,4 @@
-package string_util
+package utilsString
 
 import (
 	"golang.org/x/text/transform"
