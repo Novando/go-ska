@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	consul "github.com/hashicorp/consul/api"
+	"github.com/novando/go-ska/pkg/logger"
 	"github.com/spf13/viper"
-	"gitlab.com/mailtarget/layang-tech/purify/pkg/logger"
 )
 
 type Consul struct {
@@ -13,21 +13,27 @@ type Consul struct {
 	logger *logger.Logger
 }
 
-func InitConsul(host string, port int, schema string, logger *logger.Logger) *Consul {
+func InitConsul(host string, port int, schema string, l ...*logger.Logger) *Consul {
+	log := logger.Call()
+	if len(l) > 0 {
+		log = l[0]
+	}
 	config := consul.Config{
 		Address: fmt.Sprintf("%s:%d", host, port),
 		Scheme:  schema,
 	}
 	client, err := consul.NewClient(&config)
-	if err != nil {
-		logger.Fatalf("Error initializing Consul client: %v\n", err)
-		return nil
+	if log != nil {
+		if err != nil {
+			logger.Call().Fatalf("Error initializing Consul client: %v\n", err)
+			return nil
+		}
+		logger.Call().Infof("Consul client initialized successfully")
 	}
 
-	logger.Info("Consul client initialized successfully")
 	return &Consul{
 		client: client,
-		logger: logger,
+		logger: log,
 	}
 }
 

@@ -1,6 +1,7 @@
 package env
 
 import (
+	"errors"
 	"github.com/novando/go-ska/pkg/logger"
 	"github.com/spf13/viper"
 	"strings"
