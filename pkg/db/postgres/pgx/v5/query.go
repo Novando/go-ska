@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// QueryRow execute query, withour returning row
+// Exec execute query, for update and insert statement
 func (q *PG) Exec(sql string, arg ...any) (pgconn.CommandTag, error) {
 	if viper.GetBool("db.pg.logging") {
 		q.log.Infof("Exec: %v Arguments: %v", sql, arg)
