@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"github.com/IBM/sarama"
-	"gitlab.com/mailtarget/layang-tech/purify/pkg/logger"
+	"github.com/novando/go-ska/pkg/logger"
 	"strings"
 )
 
