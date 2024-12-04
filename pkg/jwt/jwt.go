@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func CreateToken(data map[string]interface{}, keyString string) (string, error) {
+func CreateToken(data map[string]interface{}, secret string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	// Set claims
@@ -20,7 +20,7 @@ func CreateToken(data map[string]interface{}, keyString string) (string, error) 
 	claims["exp"] = expirationTime.Unix()
 
 	// Sign the token with the key
-	tokenString, err := token.SignedString([]byte(keyString))
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", err
 	}
@@ -28,14 +28,14 @@ func CreateToken(data map[string]interface{}, keyString string) (string, error) 
 	return tokenString, nil
 }
 
-func ParseToken(tokenString string, keyString string) (map[string]interface{}, error) {
+func ParseToken(tokenString, secret string) (map[string]interface{}, error) {
 	// Parse token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Check signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(keyString), nil
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -53,4 +53,16 @@ func ParseToken(tokenString string, keyString string) (map[string]interface{}, e
 	}
 
 	return claims, nil
+}
+
+func GetValue(token, key, secret string) (res interface{}, err error) {
+	claims, err := ParseToken(token, secret)
+	if err != nil {
+		return
+	}
+	res = claims[key]
+	if res == nil {
+		err = fmt.Errorf("key not found")
+	}
+	return
 }

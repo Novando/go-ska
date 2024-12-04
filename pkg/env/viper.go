@@ -1,9 +1,12 @@
 package env
 
 import (
+	"bytes"
 	"errors"
+	"github.com/go-resty/resty/v2"
 	"github.com/novando/go-ska/pkg/logger"
 	"github.com/spf13/viper"
+	"net/http"
 	"strings"
 )
 
@@ -38,4 +41,31 @@ func InitViper(path string, l ...*logger.Logger) error {
 		logger.Call().Infof("Configs file: %v", err)
 	}
 	return err
+}
+
+// InitRemoteViper
+// Initialize Viper using remote config
+func InitRemoteViper(user, pass, url string, l ...*logger.Logger) error {
+	log := logger.Call()
+	if len(l) > 0 {
+		log = l[0]
+	}
+	client := resty.New()
+	res, err := client.R().
+		SetBasicAuth(user, pass).
+		Get(url)
+	if err != nil {
+		log.Errorf(err.Error())
+		return err
+	}
+	if res.IsError() {
+		err = errors.New(res.String())
+		if res.StatusCode() == http.StatusUnauthorized {
+			err = errors.New("wrong config's credential")
+		}
+		log.Errorf(res.String())
+		return errors.New(res.String())
+	}
+	viper.SetConfigType("json")
+	return viper.ReadConfig(bytes.NewReader(res.Body()))
 }
