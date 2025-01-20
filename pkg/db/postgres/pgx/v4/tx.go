@@ -45,17 +45,21 @@ func (q *PGTX) QueryRow(sql string, arg ...any) pgx.Row {
 }
 
 // Rollback cancel the transaction
-func (q *PGTX) Rollback() error {
+func (q *PGTX) Rollback(c context.Context) {
 	if viper.GetBool("db.pg.logging") {
 		logger.Call().Infof("Rollingback transaction")
 	}
-	return q.db.Rollback(context.Background())
+	if err := q.db.Rollback(c); err != nil {
+		q.log.Errorf("Rollback failed: %v", err.Error())
+	}
 }
 
 // Commit proceed the transaction
-func (q *PGTX) Commit() error {
+func (q *PGTX) Commit(c context.Context) {
 	if viper.GetBool("db.pg.logging") {
 		logger.Call().Infof("Commiting transaction")
 	}
-	return q.db.Commit(context.Background())
+	if err := q.db.Commit(c); err != nil {
+		q.log.Errorf("Commit failed: %v", err.Error())
+	}
 }
