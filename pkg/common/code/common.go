@@ -1,4 +1,4 @@
-package code
+package commonCode
 
 const MsgSuccess = "SUCCESS"
 const MsgErrUnknown = "ERR_UNKNOWN"

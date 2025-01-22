@@ -44,17 +44,18 @@ func (r *Redis) FlushAll() {
 	r.rdb.FlushAll(context.Background())
 }
 
-// Get get Redis data value by the key, return error
+// Get Redis data value by the key, return error
 // and empty string if key-value not exist
-func (r *Redis) Get(key string) (string, error) {
-	val, err := r.rdb.Get(context.Background(), key).Result()
+func (r *Redis) Get(key string) (val string, err error) {
+	val, err = r.rdb.Get(context.Background(), key).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return "", nil
+			err = nil
+		} else {
+			r.logger.Errorf(fmt.Sprintf("Error getting value from redis: %s", err))
 		}
-		return "", fmt.Errorf("%s: %s", "Error getting value from redis", err)
 	}
-	return val, nil
+	return
 }
 
 // Set assign/create Redis value to it's key along with the expiration time.
@@ -82,19 +83,19 @@ func (r *Redis) GetHash(key string, field string) (string, error) {
 
 // SetHash assign/create Redis value to it's key on certain hash.
 // return error and empty string if key-value not exist
-func (r *Redis) SetHash(key string, field string, value string, ttl ...time.Duration) error {
+func (r *Redis) SetHash(key string, field string, value string, ttl ...time.Duration) {
 	c := context.Background()
-	_, err := r.rdb.HSet(c, key, field, value).Result()
-	if err != nil {
-		return fmt.Errorf("%s: %s", "Error setting value in redis", err)
-	}
-	if len(ttl) > 0 {
-		err = r.rdb.Expire(c, field, ttl[0]).Err()
-		if err != nil {
-			return fmt.Errorf("%s: %s", "Error setting TTL on hash", err)
+	if _, err := r.rdb.HSet(c, key, field, value).Result(); err != nil {
+		r.logger.Errorf(fmt.Sprintf("Error setting value in redis: %s", err))
+	} else if len(ttl) > 0 {
+		if err = r.rdb.Expire(c, field, ttl[0]).Err(); err != nil {
+			r.logger.Errorf(fmt.Sprintf("Error setting TTL on hash: %s", err))
+		}
+		if err = r.rdb.HExpire(c, key, ttl[0], field).Err(); err != nil {
+			r.logger.Errorf(fmt.Sprintf("Error setting TTL on field: %s", err))
 		}
 	}
-	return nil
+	return
 }
 
 // Delete force delete Redis data value of non-hash key,
