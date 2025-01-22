@@ -14,12 +14,12 @@ type Redis struct {
 	logger *logger.Logger
 }
 
-/**
- * Init
- *
- * Initiate Redis library
- */
-func Init(host string, port int, password string, logger *logger.Logger) *Redis {
+// Init initiate Redis library
+func Init(host string, port int, password string, l ...*logger.Logger) *Redis {
+	log := logger.Call()
+	if len(l) > 0 {
+		log = l[0]
+	}
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", host, port),
 		Password: password,
@@ -28,32 +28,24 @@ func Init(host string, port int, password string, logger *logger.Logger) *Redis 
 
 	status := rdb.Ping(context.Background())
 	if status.Err() != nil {
-		logger.Fatalf("Error connecting to redis: %s", status.Err())
+		log.Fatalf("Error connecting to redis: %s", status.Err())
 	}
 
-	logger.Info("Redis client initialized successfully.")
+	log.Infof("Redis client initialized successfully.")
 
 	return &Redis{
-		rdb:    rdb,
-		logger: logger,
+		rdb,
+		log,
 	}
 }
 
-/**
- * FlushAll
- *
- * Drop all Redis data
- */
+// FlushAll drop all Redis data
 func (r *Redis) FlushAll() {
 	r.rdb.FlushAll(context.Background())
 }
 
-/**
- * Get
- *
- * Get Redis data value by the key, return error
- * and empty string if key-value not exist
- */
+// Get get Redis data value by the key, return error
+// and empty string if key-value not exist
 func (r *Redis) Get(key string) (string, error) {
 	val, err := r.rdb.Get(context.Background(), key).Result()
 	if err != nil {
@@ -65,12 +57,8 @@ func (r *Redis) Get(key string) (string, error) {
 	return val, nil
 }
 
-/**
- * Set
- *
- * Assign/create Redis value to it's key along with the expiration time.
- * return error and empty string if key-value not exist
- */
+// Set assign/create Redis value to it's key along with the expiration time.
+// return error and empty string if key-value not exist
 func (r *Redis) Set(key string, value string, expiration time.Duration) error {
 	_, err := r.rdb.Set(context.Background(), key, value, expiration).Result()
 	if err != nil {
@@ -79,12 +67,8 @@ func (r *Redis) Set(key string, value string, expiration time.Duration) error {
 	return nil
 }
 
-/**
- * GetHash
- *
- * Get Redis data value by the key on the certain hash, return error
- * and empty string if key-value not exist
- */
+// GetHash get Redis data value by the key on the certain hash, return error
+// and empty string if key-value not exist
 func (r *Redis) GetHash(key string, field string) (string, error) {
 	val, err := r.rdb.HGet(context.Background(), key, field).Result()
 	if err != nil {
@@ -96,46 +80,25 @@ func (r *Redis) GetHash(key string, field string) (string, error) {
 	return val, nil
 }
 
-/**
- * SetHash
- *
- * Assign/create Redis value to it's key on certain hash.
- * return error and empty string if key-value not exist
- */
-func (r *Redis) SetHash(key string, field string, value string) error {
-	_, err := r.rdb.HSet(context.Background(), key, field, value).Result()
+// SetHash assign/create Redis value to it's key on certain hash.
+// return error and empty string if key-value not exist
+func (r *Redis) SetHash(key string, field string, value string, ttl ...time.Duration) error {
+	c := context.Background()
+	_, err := r.rdb.HSet(c, key, field, value).Result()
 	if err != nil {
 		return fmt.Errorf("%s: %s", "Error setting value in redis", err)
+	}
+	if len(ttl) > 0 {
+		err = r.rdb.Expire(c, field, ttl[0]).Err()
+		if err != nil {
+			return fmt.Errorf("%s: %s", "Error setting TTL on hash", err)
+		}
 	}
 	return nil
 }
 
-/**
- * SetHashTTL
- *
- * Assign/create Redis value to it's key on certain hash along with
- * the expiration time. return error and empty string if key-value not exist
- */
-func (r *Redis) SetHashTTL(key string, field string, value string, ttl time.Duration) error {
-	_, err := r.rdb.HSet(context.Background(), key, field, value).Result()
-	if err != nil {
-		return fmt.Errorf("%s: %s", "Error setting value in redis", err)
-	}
-
-	err = r.rdb.Expire(context.Background(), field, ttl).Err()
-	if err != nil {
-		return fmt.Errorf("%s: %s", "Error setting TTL on hash", err)
-	}
-
-	return nil
-}
-
-/**
- * Delete
- *
- * Force delete Redis data value of non-hash key,
- * Return error if no key were found.
- */
+// Delete force delete Redis data value of non-hash key,
+// Return error if no key were found.
 func (r *Redis) Delete(key string) error {
 	_, err := r.rdb.Del(context.Background(), key).Result()
 	if err != nil {
@@ -144,11 +107,7 @@ func (r *Redis) Delete(key string) error {
 	return nil
 }
 
-/**
- * Close
- *
- * Close Redis connection
- */
+// Close Redis connection
 func (r *Redis) Close() {
 	defer func() {
 		err := r.rdb.Close()
