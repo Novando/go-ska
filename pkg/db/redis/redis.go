@@ -14,15 +14,28 @@ type Redis struct {
 	logger *logger.Logger
 }
 
+type Config struct {
+	Port int
+	Host string
+	Pass string
+	Log  *logger.Logger
+}
+
 // Init initiate Redis library
-func Init(host string, port int, password string, l ...*logger.Logger) *Redis {
+func Init(cfg *Config) *Redis {
 	log := logger.Call()
-	if len(l) > 0 {
-		log = l[0]
+	if cfg.Log != nil {
+		log = cfg.Log
+	}
+	if cfg.Port == 0 {
+		cfg.Port = 6379
+	}
+	if cfg.Host == "" {
+		cfg.Host = "localhost"
 	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", host, port),
-		Password: password,
+		Addr:     fmt.Sprintf("%v:%v", cfg.Host, cfg.Port),
+		Password: cfg.Pass,
 		DB:       0, // use default DB
 	})
 
