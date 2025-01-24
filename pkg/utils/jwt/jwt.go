@@ -1,10 +1,27 @@
-package jwt
+package utilsJwt
 
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
+
+type IDTokenData struct {
+	Email      string `json:"email"`
+	FullName   string `json:"full_name"`
+	LastName   string `json:"last_name"`
+	FirstName  string `json:"first_name"`
+	PictureURL string `json:"picture_url"`
+}
+
+type IDToken struct {
+	Issuer         string      `json:"iss"`
+	Subject        string      `json:"sub"`
+	Audience       string      `json:"aud"`
+	IssuedAt       time.Time   `json:"iat"`
+	ExpirationTime time.Time   `json:"exp"`
+	Data           IDTokenData `json:"data"`
+}
 
 // CreateToken to issue JWT
 func CreateToken(data map[string]interface{}, secret string) (string, error) {
@@ -17,8 +34,8 @@ func CreateToken(data map[string]interface{}, secret string) (string, error) {
 	}
 
 	// Set expiration
-	expirationTime := time.Now().Add(2 * time.Hour)
-	claims["exp"] = expirationTime.Unix()
+	claims["exp"] = time.Now().Add(2 * time.Hour)
+	claims["iat"] = time.Now().Unix()
 
 	// Sign the token with the key
 	tokenString, err := token.SignedString([]byte(secret))
