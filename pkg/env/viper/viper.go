@@ -1,4 +1,4 @@
-package env
+package envViper
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 
 // InitViper
 // Initialize Viper to use the config file as env variable
-func InitViper(path string, l ...*logger.Logger) error {
+func InitViper(path string, l ...*logger.Logger) (err error) {
 	log := logger.Call()
 	if len(l) > 0 {
 		log = l[0]
@@ -26,26 +26,28 @@ func InitViper(path string, l ...*logger.Logger) error {
 	}
 	splitNames := strings.Split(configName, ".")
 	if len(splitNames) < 2 {
-		err := errors.New("failed to parse config name")
-		if log != nil {
-			log.Fatalf(err.Error())
-		}
-		return err
+		err = errors.New("failed to parse config name")
+		log.Fatalf(err.Error())
+		return
 	}
 	formatName := splitNames[len(splitNames)-1]
 	viper.SetConfigName(strings.TrimRight(configName, "."+formatName))
 	viper.SetConfigType(formatName)
 	viper.AddConfigPath(strings.TrimRight(path, configName))
-	err := viper.ReadInConfig()
-	if err != nil && log != nil {
-		logger.Call().Infof("Configs file: %v", err)
+	if err = viper.ReadInConfig(); err != nil {
+		logger.Call().Warnf("Configs file: %v", err)
+		return
 	}
-	return err
+
+	if err = viper.Unmarshal(&Env); err != nil {
+		logger.Call().Warnf("Configs unmarshar error: %v", err)
+	}
+	return
 }
 
 // InitRemoteViper
 // Initialize Viper using remote config
-func InitRemoteViper(user, pass, url string, l ...*logger.Logger) error {
+func InitRemoteViper(user, pass, url string, l ...*logger.Logger) (err error) {
 	log := logger.Call()
 	if len(l) > 0 {
 		log = l[0]
@@ -56,7 +58,7 @@ func InitRemoteViper(user, pass, url string, l ...*logger.Logger) error {
 		Get(url)
 	if err != nil {
 		log.Errorf(err.Error())
-		return err
+		return
 	}
 	if res.IsError() {
 		err = errors.New(res.String())
@@ -67,5 +69,13 @@ func InitRemoteViper(user, pass, url string, l ...*logger.Logger) error {
 		return errors.New(res.String())
 	}
 	viper.SetConfigType("json")
-	return viper.ReadConfig(bytes.NewReader(res.Body()))
+	if err = viper.ReadConfig(bytes.NewReader(res.Body())); err != nil {
+		logger.Call().Warnf("Remote configs: %v", err)
+		return
+	}
+
+	if err = viper.Unmarshal(&Env); err != nil {
+		logger.Call().Warnf("Configs unmarshar error: %v", err)
+	}
+	return
 }
