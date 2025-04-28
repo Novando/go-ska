@@ -10,14 +10,7 @@ import (
 	"strings"
 )
 
-// InitViper
-// Initialize Viper to use the config file as env variable
-func InitViper(path string, l ...*logger.Logger) (err error) {
-	log := logger.Call()
-	if len(l) > 0 {
-		log = l[0]
-	}
-	var configName string
+func parseName(path string, log *logger.Logger) (formatName, configName string, err error) {
 	splitPaths := strings.Split(path, "/")
 	if len(splitPaths) > 0 {
 		for i := 0; i < len(splitPaths); i++ {
@@ -27,10 +20,24 @@ func InitViper(path string, l ...*logger.Logger) (err error) {
 	splitNames := strings.Split(configName, ".")
 	if len(splitNames) < 2 {
 		err = errors.New("failed to parse config name")
+		return
+	}
+	formatName = splitNames[len(splitNames)-1]
+	return
+}
+
+// InitViper
+// Initialize Viper to use the config file as env variable
+func InitViper(path string, l ...*logger.Logger) (err error) {
+	log := logger.Call()
+	if len(l) > 0 {
+		log = l[0]
+	}
+	formatName, configName, err := parseName(path, log)
+	if err != nil {
 		log.Fatalf(err.Error())
 		return
 	}
-	formatName := splitNames[len(splitNames)-1]
 	viper.SetConfigName(strings.TrimRight(configName, "."+formatName))
 	viper.SetConfigType(formatName)
 	viper.AddConfigPath(strings.TrimRight(path, configName))
@@ -38,7 +45,6 @@ func InitViper(path string, l ...*logger.Logger) (err error) {
 		logger.Call().Warnf("Configs file: %v", err)
 		return
 	}
-
 	if err = viper.Unmarshal(&Env); err != nil {
 		logger.Call().Warnf("Configs unmarshar error: %v", err)
 	}
@@ -68,7 +74,12 @@ func InitRemoteViper(user, pass, url string, l ...*logger.Logger) (err error) {
 		log.Errorf(res.String())
 		return errors.New(res.String())
 	}
-	viper.SetConfigType("json")
+	formatName, _, err := parseName(url, log)
+	if err != nil {
+		log.Fatalf(err.Error())
+		return
+	}
+	viper.SetConfigType(strings.ToLower(formatName))
 	if err = viper.ReadConfig(bytes.NewReader(res.Body())); err != nil {
 		logger.Call().Warnf("Remote configs: %v", err)
 		return
