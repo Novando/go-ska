@@ -13,9 +13,3 @@ func HashPassword(password string) string {
 	}
 	return string(hashedPassword)
 }
-
-// ValidatePassword Function to validate a password against its hash
-func ValidatePassword(password, hashedPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
-}
