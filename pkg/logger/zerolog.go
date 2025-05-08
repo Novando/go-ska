@@ -106,7 +106,7 @@ func newRollingFile(config Config) io.Writer {
 // Call the singleton function
 func Call() *Logger {
 	if instance == nil {
-		fmt.Println("logger not initialized, Call InitZerolog() first.")
+		PrintErrorMsgFigure("logger not initialized, Call InitZerolog() first.")
 		return nil
 	}
 	return instance
