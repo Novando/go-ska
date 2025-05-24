@@ -39,6 +39,9 @@ type Config struct {
 
 	// CallerSkip the number of directory hierarchy to be skipped
 	CallerSkip int
+
+	// LowestLevel the lowest log type that will be printed
+	LowestLevel zerolog.Level
 }
 
 type Logger struct {
@@ -61,6 +64,7 @@ func initializer(config ...Config) *Logger {
 	if len(config) == 0 {
 		config = append(config, Config{
 			ConsoleLoggingEnabled: true,
+			LowestLevel:           zerolog.TraceLevel,
 		})
 	}
 	var writers []io.Writer
@@ -75,6 +79,8 @@ func initializer(config ...Config) *Logger {
 		zerolog.CallerSkipFrameCount = config[0].CallerSkip
 	}
 	mw := io.MultiWriter(writers...)
+
+	zerolog.SetGlobalLevel(config[0].LowestLevel)
 
 	logger := zerolog.New(mw).With().Timestamp().Logger()
 
@@ -112,15 +118,14 @@ func Call() *Logger {
 	return instance
 }
 
-// Errorf print formatted error message
-func (l *Logger) Errorf(format string, a ...interface{}) {
-	errs := fmt.Errorf(format, a...)
-	l.serviceLogger.Error().Caller().Msgf(errs.Error())
+// Tracef print formated trace message
+func (l *Logger) Tracef(format string, a ...interface{}) {
+	l.serviceLogger.Trace().Msgf(format, a...)
 }
 
-// Warnf print formatter warn message
-func (l *Logger) Warnf(format string, a ...interface{}) {
-	l.serviceLogger.Warn().Msgf(format, a...)
+// Debugf print formated debug message
+func (l *Logger) Debugf(format string, a ...interface{}) {
+	l.serviceLogger.Debug().Msgf(format, a...)
 }
 
 // Infof print formated info message
@@ -128,16 +133,23 @@ func (l *Logger) Infof(format string, a ...interface{}) {
 	l.serviceLogger.Info().Msgf(format, a...)
 }
 
-// Fatalf
-// Stop the app after invocation, and
-// print Fatal message with format
-func (l *Logger) Fatalf(format string, a ...interface{}) {
-	l.serviceLogger.Fatal().Msgf(format, a...)
+// Warnf print formatter warn message
+func (l *Logger) Warnf(format string, a ...interface{}) {
+	l.serviceLogger.Warn().Msgf(format, a...)
 }
 
-// Panicf
-// Stop the app after invocation,
-// and print the Panic message
+// Errorf print formatted error message
+func (l *Logger) Errorf(format string, a ...interface{}) {
+	errs := fmt.Errorf(format, a...)
+	l.serviceLogger.Error().Caller().Msgf(errs.Error())
+}
+
+// Fatalf Stop the app after invocation, and print Fatal message with format
+func (l *Logger) Fatalf(format string, a ...interface{}) {
+	l.serviceLogger.Fatal().Caller().Msgf(format, a...)
+}
+
+// Panicf Stop the app after invocation, and print the Panic message
 func (l *Logger) Panicf(format string, a ...interface{}) {
-	l.serviceLogger.Panic().Msgf(format, a...)
+	l.serviceLogger.Panic().Caller().Msgf(format, a...)
 }
