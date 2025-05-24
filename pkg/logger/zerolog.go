@@ -22,7 +22,7 @@ type Config struct {
 	// the fields below can be skipped if this value is false!
 	FileLoggingEnabled bool
 
-	// Directory to log to to when filelogging is enabled
+	// Directory to log to when filelogging is enabled
 	Directory string
 
 	// Filename is the name of the logfile which will be placed inside the directory
@@ -71,21 +71,13 @@ func initializer(config ...Config) *Logger {
 	if config[0].FileLoggingEnabled {
 		writers = append(writers, newRollingFile(config[0]))
 	}
-	if config[0].CallerSkip != 0 {
-		zerolog.CallerSkipFrameCount = config[0].CallerSkip
+	if config[0].CallerSkip == 0 {
+		config[0].CallerSkip = 3
 	}
+	zerolog.CallerSkipFrameCount = config[0].CallerSkip
 	mw := io.MultiWriter(writers...)
 
-	logger := zerolog.New(mw).With().Timestamp().Logger()
-
-	logger.Info().
-		Bool("fileLogging", config[0].FileLoggingEnabled).
-		Bool("jsonLogOutput", config[0].EncodeLogsAsJson).
-		Str("logDirectory", config[0].Directory).
-		Str("fileName", config[0].Filename).
-		Int("maxSizeMB", config[0].MaxSize).
-		Int("maxBackups", config[0].MaxBackups).
-		Int("maxAgeInDays", config[0].MaxAge)
+	logger := zerolog.New(mw).With().Timestamp().Caller().Logger()
 
 	return &Logger{
 		serviceLogger: &logger,
@@ -115,7 +107,7 @@ func Call() *Logger {
 // Errorf print formatted error message
 func (l *Logger) Errorf(format string, a ...interface{}) {
 	errs := fmt.Errorf(format, a...)
-	l.serviceLogger.Error().Caller().Msgf(errs.Error())
+	l.serviceLogger.Error().Msgf(errs.Error())
 }
 
 // Warnf print formatter warn message
