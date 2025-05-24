@@ -122,11 +122,6 @@ func (r *Redis) Delete(key string) error {
 }
 
 // Close Redis connection
-func (r *Redis) Close() {
-	defer func() {
-		err := r.rdb.Close()
-		if err != nil {
-			r.logger.Fatalf("%s: %s", "Error closing redis", err)
-		}
-	}()
+func (r *Redis) Close() error {
+	return r.rdb.Close()
 }
