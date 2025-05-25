@@ -22,7 +22,7 @@ type Config struct {
 	// the fields below can be skipped if this value is false!
 	FileLoggingEnabled bool
 
-	// Directory to log to to when filelogging is enabled
+	// Directory to log to when filelogging is enabled
 	Directory string
 
 	// Filename is the name of the logfile which will be placed inside the directory
@@ -75,14 +75,15 @@ func initializer(config ...Config) *Logger {
 	if config[0].FileLoggingEnabled {
 		writers = append(writers, newRollingFile(config[0]))
 	}
-	if config[0].CallerSkip != 0 {
-		zerolog.CallerSkipFrameCount = config[0].CallerSkip
+	if config[0].CallerSkip == 0 {
+		config[0].CallerSkip = 3
 	}
-	mw := io.MultiWriter(writers...)
 
+	zerolog.CallerSkipFrameCount = config[0].CallerSkip
+	mw := io.MultiWriter(writers...)
 	zerolog.SetGlobalLevel(config[0].LowestLevel)
 
-	logger := zerolog.New(mw).With().Timestamp().Logger()
+	logger := zerolog.New(mw).With().Timestamp().Caller().Logger()
 
 	logger.Info().
 		Bool("fileLogging", config[0].FileLoggingEnabled).
@@ -141,15 +142,15 @@ func (l *Logger) Warnf(format string, a ...interface{}) {
 // Errorf print formatted error message
 func (l *Logger) Errorf(format string, a ...interface{}) {
 	errs := fmt.Errorf(format, a...)
-	l.serviceLogger.Error().Caller().Msgf(errs.Error())
+	l.serviceLogger.Error().Msgf(errs.Error())
 }
 
 // Fatalf Stop the app after invocation, and print Fatal message with format
 func (l *Logger) Fatalf(format string, a ...interface{}) {
-	l.serviceLogger.Fatal().Caller().Msgf(format, a...)
+	l.serviceLogger.Fatal().Msgf(format, a...)
 }
 
 // Panicf Stop the app after invocation, and print the Panic message
 func (l *Logger) Panicf(format string, a ...interface{}) {
-	l.serviceLogger.Panic().Caller().Msgf(format, a...)
+	l.serviceLogger.Panic().Msgf(format, a...)
 }
