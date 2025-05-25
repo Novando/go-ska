@@ -39,6 +39,9 @@ type Config struct {
 
 	// CallerSkip the number of directory hierarchy to be skipped
 	CallerSkip int
+
+	// LowestLevel the lowest log type that will be printed
+	LowestLevel zerolog.Level
 }
 
 type Logger struct {
@@ -61,6 +64,7 @@ func initializer(config ...Config) *Logger {
 	if len(config) == 0 {
 		config = append(config, Config{
 			ConsoleLoggingEnabled: true,
+			LowestLevel:           zerolog.TraceLevel,
 		})
 	}
 	var writers []io.Writer
@@ -74,10 +78,21 @@ func initializer(config ...Config) *Logger {
 	if config[0].CallerSkip == 0 {
 		config[0].CallerSkip = 3
 	}
+
 	zerolog.CallerSkipFrameCount = config[0].CallerSkip
 	mw := io.MultiWriter(writers...)
+	zerolog.SetGlobalLevel(config[0].LowestLevel)
 
 	logger := zerolog.New(mw).With().Timestamp().Caller().Logger()
+
+	logger.Info().
+		Bool("fileLogging", config[0].FileLoggingEnabled).
+		Bool("jsonLogOutput", config[0].EncodeLogsAsJson).
+		Str("logDirectory", config[0].Directory).
+		Str("fileName", config[0].Filename).
+		Int("maxSizeMB", config[0].MaxSize).
+		Int("maxBackups", config[0].MaxBackups).
+		Int("maxAgeInDays", config[0].MaxAge)
 
 	return &Logger{
 		serviceLogger: &logger,
@@ -98,10 +113,30 @@ func newRollingFile(config Config) io.Writer {
 // Call the singleton function
 func Call() *Logger {
 	if instance == nil {
-		fmt.Println("logger not initialized, Call InitZerolog() first.")
+		PrintErrorMsgFigure("logger not initialized, Call InitZerolog() first.")
 		return nil
 	}
 	return instance
+}
+
+// Tracef print formated trace message
+func (l *Logger) Tracef(format string, a ...interface{}) {
+	l.serviceLogger.Trace().Msgf(format, a...)
+}
+
+// Debugf print formated debug message
+func (l *Logger) Debugf(format string, a ...interface{}) {
+	l.serviceLogger.Debug().Msgf(format, a...)
+}
+
+// Infof print formated info message
+func (l *Logger) Infof(format string, a ...interface{}) {
+	l.serviceLogger.Info().Msgf(format, a...)
+}
+
+// Warnf print formatter warn message
+func (l *Logger) Warnf(format string, a ...interface{}) {
+	l.serviceLogger.Warn().Msgf(format, a...)
 }
 
 // Errorf print formatted error message
@@ -110,26 +145,12 @@ func (l *Logger) Errorf(format string, a ...interface{}) {
 	l.serviceLogger.Error().Msgf(errs.Error())
 }
 
-// Warnf print formatter warn message
-func (l *Logger) Warnf(format string, a ...interface{}) {
-	l.serviceLogger.Warn().Msgf(format, a...)
-}
-
-// Infof print formated info message
-func (l *Logger) Infof(format string, a ...interface{}) {
-	l.serviceLogger.Info().Msgf(format, a...)
-}
-
-// Fatalf
-// Stop the app after invocation, and
-// print Fatal message with format
+// Fatalf Stop the app after invocation, and print Fatal message with format
 func (l *Logger) Fatalf(format string, a ...interface{}) {
 	l.serviceLogger.Fatal().Msgf(format, a...)
 }
 
-// Panicf
-// Stop the app after invocation,
-// and print the Panic message
+// Panicf Stop the app after invocation, and print the Panic message
 func (l *Logger) Panicf(format string, a ...interface{}) {
 	l.serviceLogger.Panic().Msgf(format, a...)
 }
